@@ -124,6 +124,141 @@ def _parse_json_block(raw: str | dict[str, Any] | None, field_name: str) -> dict
     return data
 
 
+def _build_llm_from_fields(credentials: dict[str, Any]) -> dict[str, Any] | None:
+    """Build LLM config from individual form fields."""
+    provider = credentials.get("llm_provider")
+    if not provider:
+        return None
+
+    provider = str(provider).strip()
+    if not provider:
+        return None
+
+    config: dict[str, Any] = {}
+    
+    # Common fields
+    if credentials.get("llm_model"):
+        config["model"] = str(credentials.get("llm_model")).strip()
+    if credentials.get("llm_temperature"):
+        try:
+            config["temperature"] = float(credentials.get("llm_temperature", "0.1"))
+        except (ValueError, TypeError):
+            config["temperature"] = 0.1
+    if credentials.get("llm_max_tokens"):
+        try:
+            config["max_tokens"] = int(credentials.get("llm_max_tokens", "256"))
+        except (ValueError, TypeError):
+            config["max_tokens"] = 256
+
+    # Provider-specific fields
+    if provider == "openai":
+        api_key = credentials.get("llm_api_key")
+        if api_key:
+            config["api_key"] = str(api_key).strip()
+    elif provider == "azure_openai":
+        azure_kwargs: dict[str, Any] = {}
+        if credentials.get("llm_api_key"):
+            azure_kwargs["api_key"] = str(credentials.get("llm_api_key")).strip()
+        if credentials.get("llm_azure_endpoint"):
+            azure_kwargs["azure_endpoint"] = str(credentials.get("llm_azure_endpoint")).strip()
+        if credentials.get("llm_azure_deployment"):
+            azure_kwargs["azure_deployment"] = str(credentials.get("llm_azure_deployment")).strip()
+        azure_kwargs["api_version"] = "2024-10-21"  # Default
+        if azure_kwargs:
+            config["azure_kwargs"] = azure_kwargs
+    elif provider == "anthropic":
+        api_key = credentials.get("llm_api_key")
+        if api_key:
+            config["api_key"] = str(api_key).strip()
+    # Support other providers (they will use common fields like model, temperature, etc.)
+
+    if not config or "model" not in config:
+        return None
+
+    return {"provider": provider, "config": config}
+
+
+def _build_embedder_from_fields(credentials: dict[str, Any]) -> dict[str, Any] | None:
+    """Build embedder config from individual form fields."""
+    provider = credentials.get("embedder_provider")
+    if not provider:
+        return None
+
+    provider = str(provider).strip()
+    if not provider:
+        return None
+
+    config: dict[str, Any] = {}
+    
+    # Common fields
+    if credentials.get("embedder_model"):
+        config["model"] = str(credentials.get("embedder_model")).strip()
+
+    # Provider-specific fields
+    if provider == "openai":
+        api_key = credentials.get("embedder_api_key")
+        if api_key:
+            config["api_key"] = str(api_key).strip()
+    elif provider == "azure_openai":
+        azure_kwargs: dict[str, Any] = {}
+        if credentials.get("embedder_api_key"):
+            azure_kwargs["api_key"] = str(credentials.get("embedder_api_key")).strip()
+        if credentials.get("embedder_azure_endpoint"):
+            azure_kwargs["azure_endpoint"] = str(credentials.get("embedder_azure_endpoint")).strip()
+        if credentials.get("embedder_azure_deployment"):
+            azure_kwargs["azure_deployment"] = str(credentials.get("embedder_azure_deployment")).strip()
+        azure_kwargs["api_version"] = "2024-10-21"  # Default
+        if azure_kwargs:
+            config["azure_kwargs"] = azure_kwargs
+    elif provider == "huggingface":
+        # HuggingFace doesn't need API key for local models
+        pass
+
+    if not config or "model" not in config:
+        return None
+
+    return {"provider": provider, "config": config}
+
+
+def _build_vector_db_from_fields(credentials: dict[str, Any]) -> dict[str, Any] | None:
+    """Build vector DB config from individual form fields."""
+    provider = credentials.get("vector_db_provider")
+    if not provider:
+        provider = "pgvector"  # Default
+    
+    provider = str(provider).strip()
+    if provider != "pgvector":
+        return None
+
+    config: dict[str, Any] = {}
+    
+    # Required fields
+    if credentials.get("vector_db_host"):
+        config["host"] = str(credentials.get("vector_db_host")).strip()
+    if credentials.get("vector_db_name"):
+        config["dbname"] = str(credentials.get("vector_db_name")).strip()
+    if credentials.get("vector_db_user"):
+        config["user"] = str(credentials.get("vector_db_user")).strip()
+    if credentials.get("vector_db_password"):
+        config["password"] = str(credentials.get("vector_db_password")).strip()
+    
+    # Optional fields
+    if credentials.get("vector_db_port"):
+        config["port"] = str(credentials.get("vector_db_port")).strip()
+    else:
+        config["port"] = "5432"
+    
+    if credentials.get("vector_db_sslmode"):
+        config["sslmode"] = str(credentials.get("vector_db_sslmode")).strip()
+    else:
+        config["sslmode"] = "disable"
+
+    if not config or not config.get("user"):
+        return None
+
+    return {"provider": provider, "config": config}
+
+
 def _normalize_pgvector_config(
     config: dict[str, Any],
     min_connections: int,
@@ -293,20 +428,46 @@ def build_local_mem0_config(credentials: dict[str, Any]) -> dict[str, Any]:
             "pgvector_max_connections",
             PGVECTOR_MAX_CONNECTIONS,
         )
+        
+        # ========== LLM Configuration ==========
+        # Priority: JSON > Form fields (backward compatible)
         llm = _parse_json_block(credentials.get("local_llm_json"), "local_llm_json")
+        if not llm:
+            # Try to build from form fields
+            llm = _build_llm_from_fields(credentials)
+            if llm:
+                logger.debug("Built LLM config from form fields")
+        
+        if llm is None:
+            msg = "LLM configuration is required. Provide either 'local_llm_json' or form fields (llm_provider + llm_model)"
+            _raise_config_error(msg)
+        
+        # ========== Embedder Configuration ==========
+        # Priority: JSON > Form fields (backward compatible)
         embedder = _parse_json_block(credentials.get("local_embedder_json"), "local_embedder_json")
+        if not embedder:
+            # Try to build from form fields
+            embedder = _build_embedder_from_fields(credentials)
+            if embedder:
+                logger.debug("Built embedder config from form fields")
+        
+        if embedder is None:
+            msg = "Embedder configuration is required. Provide either 'local_embedder_json' or form fields (embedder_provider + embedder_model)"
+            _raise_config_error(msg)
+        
+        # ========== Vector Database Configuration ==========
+        # Priority: JSON > Form fields (backward compatible)
         vector_store = _parse_json_block(
             credentials.get("local_vector_db_json"), "local_vector_db_json",
         )
-
-        if llm is None:
-            msg = "LLM configuration (local_llm_json) is required in Local mode"
-            _raise_config_error(msg)
-        if embedder is None:
-            msg = "Embedder configuration (local_embedder_json) is required in Local mode"
-            _raise_config_error(msg)
+        if not vector_store:
+            # Try to build from form fields
+            vector_store = _build_vector_db_from_fields(credentials)
+            if vector_store:
+                logger.debug("Built vector DB config from form fields")
+        
         if vector_store is None:
-            msg = "Vector Database configuration (local_vector_db_json) is required in Local mode"
+            msg = "Vector Database configuration is required. Provide either 'local_vector_db_json' or form fields (vector_db_provider + vector_db_*)"
             _raise_config_error(msg)
 
         # Normalize pgvector config shape if necessary

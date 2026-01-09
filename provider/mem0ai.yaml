@@ -21,39 +21,200 @@ credentials_for_provider:
     help:
       en_US: "When async mode is enabled, all Mem0 operations run asynchronously and concurrently. Search waits for results; Add does not."
       zh_Hans: "开启异步模式后，所有Mem0的操作都异步并发执行，Search操作会等待返回结果而Add操作不会。"
-  local_llm_json:
+  
+  # ========== LLM Configuration ==========
+  llm_provider:
+    type: text-input
+    required: true
+    default: "azure_openai"
+    label:
+      en_US: LLM Provider
+      zh_Hans: LLM 提供商
+    placeholder:
+      en_US: "e.g., azure_openai, openai, anthropic"
+      zh_Hans: "例如：azure_openai, openai, anthropic"
+    help:
+      en_US: "Recommended: azure_openai. Also supports: openai, anthropic, etc."
+      zh_Hans: "推荐：azure_openai。也支持：openai, anthropic 等。"
+  llm_model:
+    type: text-input
+    required: true
+    label:
+      en_US: LLM Model
+      zh_Hans: LLM 模型
+    placeholder:
+      en_US: "e.g., gpt-4o-mini"
+      zh_Hans: "例如：gpt-4o-mini"
+  llm_api_key:
+    type: secret-input
+    required: false
+    label:
+      en_US: LLM API Key
+      zh_Hans: LLM API 密钥
+    placeholder:
+      en_US: "Required for OpenAI/Azure OpenAI. Leave empty for local providers."
+      zh_Hans: "OpenAI/Azure OpenAI 需要。本地提供商可留空。"
+    help:
+      en_US: "Required when LLM Provider is 'openai' or 'azure_openai'. Not needed for 'anthropic'."
+      zh_Hans: "当 LLM 提供商为 'openai' 或 'azure_openai' 时需要。'anthropic' 不需要。"
+  llm_azure_endpoint:
+    type: text-input
+    required: false
+    label:
+      en_US: Azure Endpoint
+      zh_Hans: Azure 端点
+    placeholder:
+      en_US: "https://your-resource.openai.azure.com"
+      zh_Hans: "https://your-resource.openai.azure.com"
+    help:
+      en_US: "Only required when LLM Provider is 'azure_openai'. Leave empty for other providers."
+      zh_Hans: "仅在 LLM 提供商为 'azure_openai' 时需要。其他提供商可留空。"
+  llm_azure_deployment:
+    type: text-input
+    required: false
+    label:
+      en_US: Azure Deployment Name
+      zh_Hans: Azure 部署名称
+    help:
+      en_US: "Only required when LLM Provider is 'azure_openai'. Leave empty for other providers."
+      zh_Hans: "仅在 LLM 提供商为 'azure_openai' 时需要。其他提供商可留空。"
+  llm_temperature:
+    type: text-input
+    required: false
+    default: "0.1"
+    label:
+      en_US: LLM Temperature
+      zh_Hans: LLM 温度参数
+  llm_max_tokens:
+    type: text-input
+    required: false
+    default: "256"
+    label:
+      en_US: LLM Max Tokens
+      zh_Hans: LLM 最大 Token 数
+  
+  # ========== Embedder Configuration ==========
+  embedder_provider:
+    type: text-input
+    required: true
+    label:
+      en_US: Embedder Provider
+      zh_Hans: 向量模型提供商
+    placeholder:
+      en_US: "e.g., openai, azure_openai, huggingface"
+      zh_Hans: "例如：openai, azure_openai, huggingface"
+  embedder_model:
+    type: text-input
+    required: true
+    label:
+      en_US: Embedder Model
+      zh_Hans: 向量模型
+    placeholder:
+      en_US: "e.g., text-embedding-3-small, multi-qa-MiniLM-L6-cos-v1"
+      zh_Hans: "例如：text-embedding-3-small, multi-qa-MiniLM-L6-cos-v1"
+  embedder_api_key:
+    type: secret-input
+    required: false
+    label:
+      en_US: Embedder API Key
+      zh_Hans: 向量模型 API 密钥
+    placeholder:
+      en_US: "Required for OpenAI/Azure OpenAI. Leave empty for local providers."
+      zh_Hans: "OpenAI/Azure OpenAI 需要。本地提供商可留空。"
+    help:
+      en_US: "Required when Embedder Provider is 'openai' or 'azure_openai'. Not needed for 'huggingface'."
+      zh_Hans: "当向量模型提供商为 'openai' 或 'azure_openai' 时需要。'huggingface' 不需要。"
+  embedder_azure_endpoint:
+    type: text-input
+    required: false
+    label:
+      en_US: Embedder Azure Endpoint
+      zh_Hans: 向量模型 Azure 端点
+    placeholder:
+      en_US: "https://your-resource.openai.azure.com"
+      zh_Hans: "https://your-resource.openai.azure.com"
+    help:
+      en_US: "Only required when Embedder Provider is 'azure_openai'. Leave empty for other providers."
+      zh_Hans: "仅在向量模型提供商为 'azure_openai' 时需要。其他提供商可留空。"
+  embedder_azure_deployment:
+    type: text-input
+    required: false
+    label:
+      en_US: Embedder Azure Deployment
+      zh_Hans: 向量模型 Azure 部署
+    help:
+      en_US: "Only required when Embedder Provider is 'azure_openai'. Leave empty for other providers."
+      zh_Hans: "仅在向量模型提供商为 'azure_openai' 时需要。其他提供商可留空。"
+  
+  # ========== Vector Database Configuration ==========
+  vector_db_provider:
+    type: text-input
+    required: true
+    default: "pgvector"
+    label:
+      en_US: Vector Database Provider
+      zh_Hans: 向量数据库提供商
+    placeholder:
+      en_US: "pgvector"
+      zh_Hans: "pgvector"
+  vector_db_host:
+    type: text-input
+    required: true
+    label:
+      en_US: Database Host
+      zh_Hans: 数据库主机
+    placeholder:
+      en_US: "localhost"
+      zh_Hans: "localhost"
+  vector_db_port:
+    type: text-input
+    required: false
+    default: "5432"
+    label:
+      en_US: Database Port
+      zh_Hans: 数据库端口
+  vector_db_name:
+    type: text-input
+    required: true
+    label:
+      en_US: Database Name
+      zh_Hans: 数据库名称
+    placeholder:
+      en_US: "mem0_vectors"
+      zh_Hans: "mem0_vectors"
+  vector_db_user:
+    type: text-input
+    required: true
+    label:
+      en_US: Database User
+      zh_Hans: 数据库用户
+    placeholder:
+      en_US: "postgres"
+      zh_Hans: "postgres"
+  vector_db_password:
     type: secret-input
     required: true
     label:
-      en_US: LLM (JSON)
-      zh_Hans: LLM（JSON）
-    placeholder:
-      en_US: '{"provider":"azure_openai","config":{...}}'
-      zh_Hans: '{"provider":"azure_openai","config":{...}}'
-  local_embedder_json:
-    type: secret-input
-    required: true
+      en_US: Database Password
+      zh_Hans: 数据库密码
+  vector_db_sslmode:
+    type: text-input
+    required: false
+    default: "disable"
     label:
-      en_US: Embedder (JSON)
-      zh_Hans: 向量模型（JSON）
+      en_US: Database SSL Mode
+      zh_Hans: 数据库 SSL 模式
     placeholder:
-      en_US: '{"provider":"azure_openai","config":{...}}'
-      zh_Hans: '{"provider":"azure_openai","config":{...}}'
-  local_vector_db_json:
-    type: secret-input
-    required: true
-    label:
-      en_US: Vector Database (JSON)
-      zh_Hans: 向量数据库（JSON）
-    placeholder:
-      en_US: '{"provider":"pgvector","config":{...}}'
-      zh_Hans: '{"provider":"pgvector","config":{...}}'
+      en_US: "disable, require, prefer"
+      zh_Hans: "disable, require, prefer"
+  
+  # ========== Optional Configurations ==========
   local_graph_db_json:
     type: secret-input
     required: false
     label:
-      en_US: Graph Database (JSON)
-      zh_Hans: 图数据库（JSON）
+      en_US: Graph Database (JSON) - Optional
+      zh_Hans: 图数据库（JSON）- 可选
     placeholder:
       en_US: '{"provider":"neo4j","config":{...}}'
       zh_Hans: '{"provider":"neo4j","config":{...}}'
@@ -61,8 +222,8 @@ credentials_for_provider:
     type: secret-input
     required: false
     label:
-      en_US: Reranker (JSON)
-      zh_Hans: 重排序模型（JSON）
+      en_US: Reranker (JSON) - Optional
+      zh_Hans: 重排序模型（JSON）- 可选
     placeholder:
       en_US: '{"provider":"cohere","config":{...}}'
       zh_Hans: '{"provider":"cohere","config":{...}}'
