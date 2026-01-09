@@ -1,0 +1,116 @@
+identity:
+  name: add_memory
+  author: beersoccer
+  label:
+    en_US: Add Memory
+    zh_Hans: 添加记忆
+description:
+  human:
+    en_US: Intelligently manage memories in Mem0 by adding, updating, or deleting based on user interactions
+    zh_Hans: 根据用户交互智能管理 Mem0 中的记忆，包括添加、更新或删除
+  llm: Use this tool to intelligently manage memories in Mem0. It can add new memories, update existing ones, or delete outdated information based on user-assistant interactions. Mem0 will automatically determine whether to add, update, or delete memories based on the context.
+parameters:
+  - name: user
+    type: string
+    required: true
+    label:
+      en_US: User Message
+      zh_Hans: 用户消息
+    human_description:
+      en_US: The message from the user in the conversation.
+      zh_Hans: 对话中的用户消息。
+    llm_description: The message from the user in the conversation.
+    form: llm
+  - name: assistant
+    type: string
+    required: false
+    label:
+      en_US: Assistant Response
+      zh_Hans: 助手回应
+    human_description:
+      en_US: Optional. The response from the assistant in the conversation. Leave empty if not applicable.
+      zh_Hans: 可选。对话中的助手回应。如果不适用请留空。
+    llm_description: Optional assistant response in the conversation. Only provide if there is a distinct assistant reply to remember. Leave empty otherwise.
+    form: llm
+  - name: user_id
+    type: string
+    required: true
+    label:
+      en_US: User ID
+      zh_Hans: 用户ID
+    human_description:
+      en_US: Required. The unique user identifier.
+      zh_Hans: 必填。用户的唯一标识符。
+    llm_description: Required user identifier.
+    form: llm
+  - name: app_id
+    type: string
+    required: false
+    label:
+      en_US: App ID
+      zh_Hans: 应用ID
+    human_description:
+      en_US: Optional application identifier for namespace isolation. If provided, it will be used as agent_id to ensure memories are isolated by app. Takes priority over agent_id if both are provided.
+      zh_Hans: 可选的应用标识符，用于命名空间隔离。如果提供，将作为 agent_id 使用以确保记忆按应用隔离。如果同时提供了 app_id 和 agent_id，app_id 优先。
+    llm_description: Optional application identifier for namespace isolation. If provided, it will be used as agent_id to ensure memories are isolated by app. Takes priority over agent_id if both are provided.
+    form: llm
+  - name: agent_id
+    type: string
+    required: false
+    label:
+      en_US: Agent ID
+      zh_Hans: 代理ID
+    human_description:
+      en_US: Optional agent identifier. Only provide if you need to associate this memory with a specific agent and app_id is not provided. Leave empty otherwise.
+      zh_Hans: 可选的代理标识符。仅在需要将此记忆与特定代理关联且未提供 app_id 时使用。否则留空。
+    llm_description: Optional agent identifier. Only provide if associating this memory with a specific agent and app_id is not provided. Leave empty otherwise.
+    form: llm
+  - name: run_id
+    type: string
+    required: false
+    label:
+      en_US: Run ID
+      zh_Hans: 运行ID
+    human_description:
+      en_US: Optional run identifier. Only provide if you need to associate this memory with a specific run. Leave empty otherwise.
+      zh_Hans: 可选的运行标识符。仅在需要将此记忆与特定运行关联时提供。否则留空。
+    llm_description: Optional run identifier. Only provide if associating this memory with a specific run. Leave empty otherwise.
+    form: llm
+  - name: metadata
+    type: string
+    required: false
+    label:
+      en_US: Metadata (JSON)
+      zh_Hans: 元数据（JSON）
+    human_description:
+      en_US: Optional metadata as JSON string. Only provide if you need to attach custom metadata to this memory. Leave empty otherwise.
+      zh_Hans: 可选的元数据，JSON 字符串格式。仅在需要为此记忆附加自定义元数据时提供。否则留空。
+    llm_description: Optional metadata as JSON string. Only provide if attaching custom metadata is needed. Leave empty otherwise.
+    form: llm
+  - name: output_format
+    type: select
+    required: false
+    label:
+      en_US: Output Format Version
+      zh_Hans: 输出格式版本
+    human_description:
+      en_US: The version of the output format (v1.0, v1.1, or v2). Default is v1.1.
+      zh_Hans: 输出格式的版本（v1.0、v1.1 或 v2）。默认为 v1.1。
+    llm_description: The version of the output format. Default is v1.1.
+    form: form
+    options:
+      - value: v1.0
+        label:
+          en_US: v1.0
+          zh_Hans: v1.0
+      - value: v1.1
+        label:
+          en_US: v1.1 (default)
+          zh_Hans: v1.1（默认）
+      - value: v2
+        label:
+          en_US: v2
+          zh_Hans: v2
+extra:
+  python:
+    source: tools/add_memory.py
