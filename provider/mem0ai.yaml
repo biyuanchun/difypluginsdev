@@ -208,29 +208,108 @@ credentials_for_provider:
       en_US: "disable, require, prefer"
       zh_Hans: "disable, require, prefer"
   
-  # ========== Optional Configurations ==========
-  local_graph_db_json:
+  # ========== Graph Database Configuration (Optional) ==========
+  graph_db_provider:
+    type: text-input
+    required: false
+    label:
+      en_US: Graph Database Provider (Optional)
+      zh_Hans: 图数据库提供商（可选）
+    placeholder:
+      en_US: "e.g., neo4j"
+      zh_Hans: "例如：neo4j"
+    help:
+      en_US: "Optional. Leave empty if not using graph database."
+      zh_Hans: "可选。如果不使用图数据库，可留空。"
+  graph_db_url:
+    type: text-input
+    required: false
+    label:
+      en_US: Graph Database URL
+      zh_Hans: 图数据库 URL
+    placeholder:
+      en_US: "e.g., bolt://localhost:7687 or neo4j+s://your-instance.databases.neo4j.io"
+      zh_Hans: "例如：bolt://localhost:7687 或 neo4j+s://your-instance.databases.neo4j.io"
+    help:
+      en_US: "Only required when Graph Database Provider is configured."
+      zh_Hans: "仅在配置了图数据库提供商时需要。"
+  graph_db_username:
+    type: text-input
+    required: false
+    label:
+      en_US: Graph Database Username
+      zh_Hans: 图数据库用户名
+    help:
+      en_US: "Only required when Graph Database Provider is configured."
+      zh_Hans: "仅在配置了图数据库提供商时需要。"
+  graph_db_password:
     type: secret-input
     required: false
     label:
-      en_US: Graph Database (JSON) - Optional
-      zh_Hans: 图数据库（JSON）- 可选
+      en_US: Graph Database Password
+      zh_Hans: 图数据库密码
+    help:
+      en_US: "Only required when Graph Database Provider is configured."
+      zh_Hans: "仅在配置了图数据库提供商时需要。"
+  graph_db_database:
+    type: text-input
+    required: false
+    default: "neo4j"
+    label:
+      en_US: Graph Database Name
+      zh_Hans: 图数据库名称
+    help:
+      en_US: "Only required when Graph Database Provider is configured. Default: neo4j"
+      zh_Hans: "仅在配置了图数据库提供商时需要。默认值：neo4j"
+  
+  # ========== Reranker Configuration (Optional) ==========
+  reranker_provider:
+    type: text-input
+    required: false
+    label:
+      en_US: Reranker Provider (Optional)
+      zh_Hans: 重排序模型提供商（可选）
     placeholder:
-      en_US: '{"provider":"neo4j","config":{...}}'
-      zh_Hans: '{"provider":"neo4j","config":{...}}'
-  local_reranker_json:
+      en_US: "e.g., cohere, huggingface"
+      zh_Hans: "例如：cohere, huggingface"
+    help:
+      en_US: "Optional. Leave empty if not using reranker."
+      zh_Hans: "可选。如果不使用重排序模型，可留空。"
+  reranker_model:
+    type: text-input
+    required: false
+    label:
+      en_US: Reranker Model
+      zh_Hans: 重排序模型
+    placeholder:
+      en_US: "e.g., rerank-english-v3.0, BAAI/bge-reranker-v2-m3"
+      zh_Hans: "例如：rerank-english-v3.0, BAAI/bge-reranker-v2-m3"
+    help:
+      en_US: "Only required when Reranker Provider is configured."
+      zh_Hans: "仅在配置了重排序模型提供商时需要。"
+  reranker_api_key:
     type: secret-input
     required: false
     label:
-      en_US: Reranker (JSON) - Optional
-      zh_Hans: 重排序模型（JSON）- 可选
-    placeholder:
-      en_US: '{"provider":"cohere","config":{...}}'
-      zh_Hans: '{"provider":"cohere","config":{...}}'
+      en_US: Reranker API Key
+      zh_Hans: 重排序模型 API 密钥
+    help:
+      en_US: "Required when Reranker Provider is 'cohere'. Not needed for 'huggingface'."
+      zh_Hans: "当重排序模型提供商为 'cohere' 时需要。'huggingface' 不需要。"
+  reranker_top_k:
+    type: text-input
+    required: false
+    default: "5"
+    label:
+      en_US: Reranker Top K
+      zh_Hans: 重排序 Top K
+    help:
+      en_US: "Only required when Reranker Provider is configured. Default: 5"
+      zh_Hans: "仅在配置了重排序模型提供商时需要。默认值：5"
   max_concurrent_memory_operations:
     type: text-input
     required: false
-    default: 40
+    default: "40"
     label:
       en_US: Max Concurrent Memory Operations
       zh_Hans: 最大并发记忆操作数
@@ -240,7 +319,7 @@ credentials_for_provider:
   pgvector_min_connections:
     type: text-input
     required: false
-    default: 10
+    default: "10"
     label:
       en_US: PGVector Min Connections
       zh_Hans: PGVector 最小连接数
@@ -250,7 +329,7 @@ credentials_for_provider:
   pgvector_max_connections:
     type: text-input
     required: false
-    default: 40
+    default: "40"
     label:
       en_US: PGVector Max Connections
       zh_Hans: PGVector 最大连接数

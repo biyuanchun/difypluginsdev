@@ -46,6 +46,21 @@
 - **Database Password**: 数据库密码
 - **Database SSL Mode**: `disable` | `require` | `prefer`（默认 `disable`）
 
+#### Graph Database 配置（可选）
+- **Graph Database Provider** (可选): 例如 `neo4j`
+- **Graph Database URL** (条件必需): 例如 `bolt://localhost:7687` 或 `neo4j+s://your-instance.databases.neo4j.io`
+- **Graph Database Username** (条件必需): 图数据库用户名
+- **Graph Database Password** (条件必需): 图数据库密码
+- **Graph Database Name** (可选): 图数据库名称（默认 `neo4j`）
+
+#### Reranker 配置（可选）
+- **Reranker Provider** (可选): 例如 `cohere`, `huggingface`
+- **Reranker Model** (条件必需): 例如 `rerank-english-v3.0`, `BAAI/bge-reranker-v2-m3`
+- **Reranker API Key** (条件必需):
+  - ✅ 当 Provider 为 `cohere` 时需要
+  - ❌ 当 Provider 为 `huggingface` 时不需要
+- **Reranker Top K** (可选): Top K 值（默认 `5`）
+
 ### 方式 2: JSON 配置（向后兼容，高级用户）
 
 仍然支持原有的 JSON 配置方式，用于复杂场景或高级配置。

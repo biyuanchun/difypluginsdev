@@ -31,6 +31,10 @@ def get_int_credential(
     default: int,
 ) -> int:
     """Read an integer credential with a safe fallback.
+    
+    Automatically handles both string and numeric inputs from Dify UI.
+    Dify framework may pass numbers as strings or actual numbers, so we
+    normalize the input before parsing.
 
     Args:
         credentials: Provider credentials dictionary.
@@ -44,8 +48,16 @@ def get_int_credential(
     raw = credentials.get(key)
     if raw is None or raw == "":
         return default
+    
+    # Normalize input: convert to string first, then parse
+    # This handles cases where Dify passes numbers as strings or actual numbers
     try:
-        value = int(raw)
+        # If it's already a number, convert to string then back to int
+        if isinstance(raw, (int, float)):
+            value = int(raw)
+        else:
+            # If it's a string, try to parse it
+            value = int(str(raw).strip())
     except (TypeError, ValueError):
         logger.warning(
             "Invalid integer value for %s: %s, using default: %d",
@@ -54,6 +66,7 @@ def get_int_credential(
             default,
         )
         return default
+    
     if value <= 0:
         logger.warning(
             "Non-positive value for %s: %s, using default: %d",
@@ -254,6 +267,81 @@ def _build_vector_db_from_fields(credentials: dict[str, Any]) -> dict[str, Any] 
         config["sslmode"] = "disable"
 
     if not config or not config.get("user"):
+        return None
+
+    return {"provider": provider, "config": config}
+
+
+def _build_graph_db_from_fields(credentials: dict[str, Any]) -> dict[str, Any] | None:
+    """Build graph DB config from individual form fields."""
+    provider = credentials.get("graph_db_provider")
+    if not provider:
+        return None
+
+    provider = str(provider).strip()
+    if not provider:
+        return None
+
+    config: dict[str, Any] = {}
+    
+    # Required fields
+    if credentials.get("graph_db_url"):
+        config["url"] = str(credentials.get("graph_db_url")).strip()
+    if credentials.get("graph_db_username"):
+        config["username"] = str(credentials.get("graph_db_username")).strip()
+    if credentials.get("graph_db_password"):
+        config["password"] = str(credentials.get("graph_db_password")).strip()
+    
+    # Optional fields
+    if credentials.get("graph_db_database"):
+        config["database"] = str(credentials.get("graph_db_database")).strip()
+    else:
+        config["database"] = "neo4j"
+
+    if not config or not config.get("url"):
+        return None
+
+    return {"provider": provider, "config": config}
+
+
+def _build_reranker_from_fields(credentials: dict[str, Any]) -> dict[str, Any] | None:
+    """Build reranker config from individual form fields."""
+    provider = credentials.get("reranker_provider")
+    if not provider:
+        return None
+
+    provider = str(provider).strip()
+    if not provider:
+        return None
+
+    config: dict[str, Any] = {}
+    
+    # Common fields
+    if credentials.get("reranker_model"):
+        config["model"] = str(credentials.get("reranker_model")).strip()
+    
+    if credentials.get("reranker_top_k"):
+        try:
+            config["top_k"] = int(str(credentials.get("reranker_top_k")).strip())
+        except (TypeError, ValueError):
+            config["top_k"] = 5  # Default
+    else:
+        config["top_k"] = 5
+
+    # Provider-specific fields
+    if provider == "cohere":
+        api_key = credentials.get("reranker_api_key")
+        if api_key:
+            config["api_key"] = str(api_key).strip()
+    elif provider == "huggingface":
+        # HuggingFace doesn't need API key for local models
+        # Optional device, batch_size, max_length can be added if needed
+        pass
+    elif provider == "sentence_transformer":
+        # Sentence Transformer doesn't need API key for local models
+        pass
+
+    if not config or "model" not in config:
         return None
 
     return {"provider": provider, "config": config}
@@ -482,12 +570,27 @@ def build_local_mem0_config(credentials: dict[str, Any]) -> dict[str, Any]:
                 pg_max_connections,
             )  # type: ignore[index]
 
+        # ========== Reranker Configuration (Optional) ==========
+        # Priority: JSON > Form fields (backward compatible)
         reranker = _parse_json_block(
             credentials.get("local_reranker_json"), "local_reranker_json",
         )
+        if not reranker:
+            # Try to build from form fields
+            reranker = _build_reranker_from_fields(credentials)
+            if reranker:
+                logger.debug("Built reranker config from form fields")
+        
+        # ========== Graph Database Configuration (Optional) ==========
+        # Priority: JSON > Form fields (backward compatible)
         graph_store = _parse_json_block(
             credentials.get("local_graph_db_json"), "local_graph_db_json",
         )
+        if not graph_store:
+            # Try to build from form fields
+            graph_store = _build_graph_db_from_fields(credentials)
+            if graph_store:
+                logger.debug("Built graph DB config from form fields")
 
         config: dict[str, Any] = {
             "llm": llm,
